@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="BBT is a BPE-guided byte-level language model that preserves sequence compression while removing vocabulary-sized input and output layers.">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="Hyunho Kim, SeungYeol Baek">
+  <meta name="google-site-verification" content="JMGi8xwgK0BP7GsFzsMu1oUrmJLBlK2E0i1owPOGDEE">
+  <link rel="canonical" href="https://khel-kim.github.io/bbt/">
+
+  <meta name="citation_title" content="BBT: BPE-Guided Byte Transformer">
+  <meta name="citation_author" content="Hyunho Kim">
+  <meta name="citation_author" content="SeungYeol Baek">
+  <meta name="citation_publication_date" content="2026">
+  <meta name="citation_pdf_url" content="https://khel-kim.github.io/bbt/BBT_BPE-Guided_Byte_Transformer.pdf">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="BBT: BPE-Guided Byte Transformer">
+  <meta property="og:description" content="A BPE-guided byte-level language model with fewer parameters, improved robustness, and stronger cross-lingual transfer.">
+  <meta property="og:url" content="https://khel-kim.github.io/bbt/">
+  <meta property="og:image" content="https://khel-kim.github.io/bbt/figures/architecture_comparison.png">
+  <meta property="og:image:alt" content="Comparison between a standard BPE Transformer and BBT">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>BBT: BPE-Guided Byte Transformer</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "BBT: BPE-Guided Byte Transformer",
+    "description": "BBT preserves the sequence compression benefits of BPE segmentation while replacing vocabulary lookup and the vocabulary-sized language-model head with byte-level composition.",
+    "datePublished": "2026",
+    "author": [
+      {
+        "@type": "Person",
+        "name": "Hyunho Kim",
+        "affiliation": { "@type": "Organization", "name": "Kakao Corp" }
+      },
+      {
+        "@type": "Person",
+        "name": "SeungYeol Baek",
+        "affiliation": { "@type": "Organization", "name": "AgileSoDA" }
+      }
+    ],
+    "url": "https://khel-kim.github.io/bbt/",
+    "image": "https://khel-kim.github.io/bbt/figures/architecture_comparison.png",
+    "encoding": {
+      "@type": "MediaObject",
+      "contentUrl": "https://khel-kim.github.io/bbt/BBT_BPE-Guided_Byte_Transformer.pdf",
+      "encodingFormat": "application/pdf"
+    },
+    "sameAs": "https://github.com/khel-kim/bbt",
+    "keywords": [
+      "byte-level language model",
+      "byte-pair encoding",
+      "BPE",
+      "Transformer",
+      "language modeling"
+    ]
+  }
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef2f7;
+      --surface: #ffffff;
+      --text: #172033;
+      --muted: #5e687b;
+      --accent: #175cd3;
+      --accent-hover: #124aa8;
+      --border: #d8dee9;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    .page {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 100%;
+    }
+
+    header {
+      padding: 20px clamp(16px, 4vw, 48px);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 12px rgb(23 32 51 / 6%);
+      z-index: 1;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 2.6vw, 32px);
+      line-height: 1.2;
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 9px 15px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-weight: 650;
+      text-decoration: none;
+      transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+    }
+
+    .button:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .button.primary {
+      color: #fff;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .button.primary:hover {
+      color: #fff;
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    main {
+      min-height: 0;
+      padding: 16px;
+    }
+
+    .viewer {
+      width: 100%;
+      height: 100%;
+      min-height: 70vh;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgb(23 32 51 / 10%);
+    }
+
+    .paper-summary {
+      max-width: 960px;
+      margin: 20px auto 4px;
+      padding: clamp(20px, 4vw, 36px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 8px 30px rgb(23 32 51 / 7%);
+    }
+
+    .paper-summary h2 {
+      margin: 0 0 12px;
+      font-size: 24px;
+    }
+
+    .paper-summary h3 {
+      margin: 24px 0 10px;
+      font-size: 18px;
+    }
+
+    .paper-summary p,
+    .paper-summary li {
+      line-height: 1.7;
+    }
+
+    .paper-summary p { margin: 0; }
+
+    .paper-summary ul {
+      margin: 0;
+      padding-left: 22px;
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 70vh;
+      border: 0;
+    }
+
+    @media (max-width: 760px) {
+      .page { display: block; }
+
+      .header-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      nav { justify-content: flex-start; }
+
+      main { padding: 10px; }
+
+      .viewer,
+      iframe { min-height: calc(100vh - 230px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="header-inner">
+        <div>
+          <h1>BBT: BPE-Guided Byte Transformer</h1>
+          <p class="subtitle">Hyunho Kim · SeungYeol Baek</p>
+        </div>
+        <nav aria-label="Paper resources">
+          <a class="button primary" href="BBT_BPE-Guided_Byte_Transformer.pdf">Open paper</a>
+          <a class="button" href="BBT_Poster.pdf">Open poster</a>
+          <a class="button" href="https://github.com/khel-kim/bbt">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="viewer">
+        <iframe
+          src="BBT_BPE-Guided_Byte_Transformer.pdf#view=FitH"
+          title="BBT: BPE-Guided Byte Transformer paper">
+        </iframe>
+      </div>
+
+      <article class="paper-summary">
+        <h2>About the paper</h2>
+        <p>
+          BBT preserves the sequence-compression benefits of byte-pair encoding
+          (BPE) while replacing vocabulary lookup and the vocabulary-sized language
+          model head with byte-level composition. It composes segment representations
+          from bytes and generates each segment byte by byte.
+        </p>
+        <h3>Key results</h3>
+        <ul>
+          <li>Lower test bits per byte than matched standard BPE Transformers</li>
+          <li>20–40% fewer parameters at comparable FLOPs</li>
+          <li>Improved robustness to character-level corruption</li>
+          <li>Stronger transfer to unseen languages</li>
+        </ul>
+      </article>
+    </main>
+  </div>
+</body>
+</html>
